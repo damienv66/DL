@@ -50,15 +50,16 @@ class MILDataset(Dataset):
                 instance_image = self.transform(instance_image)
 
             instances.append(instance_image.unsqueeze(0))
-        instances=torch.cat(instances)
+        features={}
+        features['instances']=torch.cat(instances)
 
         # Retrieve the label for the current bag
-
+   
         label = self.labels_df[self.labels_df['ID'] == bag_id]['LABEL'].values[0]
-        age = self.labels_df[self.labels_df['ID'] == bag_id]['AGE'].values[0]
-        lymph_count = self.labels_df[self.labels_df['ID'] == bag_id]['LYMPH_COUNT'].values[0]
-        gender = self.labels_df[self.labels_df['ID'] == bag_id]['GENDER'].values[0]
+        features['age'] = self.labels_df[self.labels_df['ID'] == bag_id]['AGE'].values[0]
+        features['lymph_count'] = self.labels_df[self.labels_df['ID'] == bag_id]['LYMPH_COUNT'].values[0]
+        features['gender'] = self.labels_df[self.labels_df['ID'] == bag_id]['GENDER'].values[0]
 
 
         # Convert label to tensor if necessary, depending on your model's requirements
-        return instances, age, lymph_count, gender, label
+        return features, label

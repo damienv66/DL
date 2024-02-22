@@ -143,7 +143,7 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
         self.ResNet=ResNet50(K, channels)
         self.fc = nn.Linear(K*8*7*7, num_classes)    
-        self.softmax = nn.Softmax()
+        
         
     def forward(self, bag_images):
        x = self.ResNet(bag_images)
@@ -154,7 +154,7 @@ class CNN(nn.Module):
        
        x = self.fc(x)
        #print(x.shape, 'sortie  linear')
-       x = self.softmax(x)
+       x = torch.sigmoid(x)
        #print(x.shape, 'sortie  softmax')
        return x 
 
