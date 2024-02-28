@@ -2,7 +2,7 @@ import torch
 import torch.nn as  nn
 import torch.nn.functional as F
 import torch
-
+import  torchvision
 class Bottleneck(nn.Module):
     expansion = 4
     def __init__(self, in_channels, out_channels, i_downsample=None, stride=1):
@@ -136,7 +136,49 @@ def ResNet101(num_classes, channels=3):
 def ResNet152(num_classes, channels=3):
     return ResNet(Bottleneck, [3,8,36,3], num_classes, channels)
 
-
+class ResNet18_perso(nn.Module):
+    def __init__(self, pool='average', pretrain=True):
+        super(CNN, self).__init__()
+        weights=torchvision.models.ResNet18_Weights.DEFAULT if pretrain else None
+        self.ResNet=torchvision.models.resnet18(pretrained=True)
+        self.layers = list(self.ResNet.children())[:2]
+        self.Partial_ResNet = nn.Sequential(*self.layers)
+        self.flatten= nn.Flatten()
+        self.pool=pool 
+        
+        
+    def forward(self, bag_images):
+       x = self.Partial_ResNet(bag_images)
+       x = self.flatten(x)
+       if self.pool=='average':
+           x = torch.mean(x, dim=0)
+       else:
+           x = torch.max(x, dim=0)
+       return x  
+    
+class CNN(nn.Module):
+    def __init__(self, K, num_classes=2, channels=3):
+        super(CNN, self).__init__()
+        self.ResNet=ResNet50(K, channels)
+        self.fc = nn.Linear(K*8*7*7, num_classes)    
+        
+        
+    def forward(self, bag_images):
+       x = self.ResNet(bag_images)
+       print(x.shape, 'sortie res net')
+       x = torch.mean(x, dim=0)
+       print(x.shape, 'sortie  mean')
+       #x = F.relu(x)
+       
+       x = self.fc(x)
+       print(x.shape, 'sortie  linear')
+       #print(x.shape)
+       #x = F.relu(x)
+       x = torch.log_softmax(x,dim=0)
+       print(x.shape, 'sortie  softmax')
+       #print(x)
+       return x 
+  
 
 class CNN(nn.Module):
     def __init__(self, K, num_classes=2, channels=3):
@@ -147,15 +189,18 @@ class CNN(nn.Module):
         
     def forward(self, bag_images):
        x = self.ResNet(bag_images)
-       #print(x.shape, 'sortie res net')
+       print(x.shape, 'sortie res net')
        x = torch.mean(x, dim=0)
-       #print(x.shape, 'sortie  mean')
-       x = F.relu(x)
+       print(x.shape, 'sortie  mean')
+       #x = F.relu(x)
        
        x = self.fc(x)
-       #print(x.shape, 'sortie  linear')
-       x = torch.sigmoid(x)
-       #print(x.shape, 'sortie  softmax')
+       print(x.shape, 'sortie  linear')
+       #print(x.shape)
+       #x = F.relu(x)
+       x = torch.log_softmax(x,dim=0)
+       print(x.shape, 'sortie  softmax')
+       #print(x)
        return x 
 
 

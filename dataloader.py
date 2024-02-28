@@ -15,19 +15,22 @@ def metadata_build(df_train):
 
 
 class MILDataset(Dataset):
-    def __init__(self, root_dir, labels_df, transform=None):
+    def __init__(self, root_dir, df, transform=None):
         """
         Args:
             root_dir (string): Directory with all the bags.
             labels_df (DataFrame): DataFrame containing labels and other information.
             transform (callable, optional): Optional transform to be applied on a sample.
         """
-        labels_df = metadata_build(labels_df)
+        df = metadata_build(df)
         self.root_dir = root_dir
-        self.labels_df = labels_df
+        self.labels_df = df
         self.transform = transform
-        self.bag_paths = [os.path.join(root_dir, o) for o in os.listdir(root_dir) if os.path.isdir(os.path.join(root_dir, o))]
+        self.bag_paths = [os.path.join(root_dir, o) for o in df.ID if os.path.isdir(os.path.join(root_dir, o))]
+        self.bag_paths.sort()
         self.bag_ids = [os.path.basename(o) for o in self.bag_paths]
+
+        
 
     def __len__(self):
         return len(self.bag_paths)
@@ -35,7 +38,6 @@ class MILDataset(Dataset):
     def __getitem__(self, idx):
         bag_id = self.bag_ids[idx]
         bag_path = self.bag_paths[idx]
-        self.bag_paths.sort()
 
         instances = []
 
@@ -59,7 +61,7 @@ class MILDataset(Dataset):
         features['age'] = self.labels_df[self.labels_df['ID'] == bag_id]['AGE'].values[0]
         features['lymph_count'] = self.labels_df[self.labels_df['ID'] == bag_id]['LYMPH_COUNT'].values[0]
         features['gender'] = self.labels_df[self.labels_df['ID'] == bag_id]['GENDER'].values[0]
-
+        features['id'] = bag_id
 
         # Convert label to tensor if necessary, depending on your model's requirements
         return features, label
